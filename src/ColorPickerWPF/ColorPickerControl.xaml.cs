@@ -40,18 +40,6 @@ namespace ColorPickerWPF
 
             ColorPickerSwatch.ColorPickerControl = this;
 
-            // Load from file if possible
-            if (ColorPickerSettings.UsingCustomPalette && File.Exists(ColorPickerSettings.CustomPaletteFilename))
-            {
-                try
-                {
-                    ColorPalette = ColorPalette.LoadFromXml(ColorPickerSettings.CustomPaletteFilename);
-                }
-                catch (Exception ex)
-                {
-                    ex = ex;
-                }
-            }
 
             if (ColorPalette == null)
             {
@@ -66,16 +54,6 @@ namespace ColorPickerWPF
             
             Swatch1.SwatchListBox.ItemsSource = ColorSwatch1;
             Swatch2.SwatchListBox.ItemsSource = ColorSwatch2;
-
-            if (ColorPickerSettings.UsingCustomPalette)
-            {
-                CustomColorSwatch.SwatchListBox.ItemsSource = ColorPalette.CustomColors;
-            }
-            else
-            {
-                customColorsLabel.Visibility = Visibility.Collapsed;
-                CustomColorSwatch.Visibility = Visibility.Collapsed;
-            }
 
 
             RSlider.Slider.Maximum = 255;
@@ -121,8 +99,6 @@ namespace ColorPickerWPF
         {
             Color = color;
 
-            CustomColorSwatch.CurrentColor = color;
-
             IsSettingValues = true;
 
             RSlider.Slider.Value = Color.R;
@@ -138,14 +114,6 @@ namespace ColorPickerWPF
 
             IsSettingValues = false;
             OnPickColor?.Invoke(color);
-        }
-
-        internal void CustomColorsChanged()
-        {
-            if (ColorPickerSettings.UsingCustomPalette)
-            {
-                SaveCustomPalette(ColorPickerSettings.CustomPaletteFilename);
-            }
         }
 
 
@@ -199,13 +167,6 @@ namespace ColorPickerWPF
             Mouse.Capture(null);
             this.MouseMove -= ColorPickerControl_MouseMove;
             this.MouseUp -= ColorPickerControl_MouseUp;
-        }
-
-        private void SampleImage2_OnMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            var pos = e.GetPosition(SampleImage2);
-            var img = SampleImage2.Source as BitmapSource;
-            SampleImageClick(img, pos);
         }
 
         private void Swatch_OnOnPickColor(Color color)
@@ -285,60 +246,6 @@ namespace ColorPickerWPF
 
         }
 
-        private void PickerHueSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            UpdateImageForHSV();
-        }
-
-
-        private void UpdateImageForHSV()
-        {
-
-            //var hueChange = (int)((PickerHueSlider.Value / 360.0) * 240);
-            var sliderHue = (float) PickerHueSlider.Value;
-
-
-            //var colorPickerImage = System.IO.Path.Combine(Environment.CurrentDirectory, @"/Resources/colorpicker1.png");
-            var img =
-                new BitmapImage(new Uri("pack://application:,,,/ColorPickerWPF;component/Resources/colorpicker2.png",
-                    UriKind.Absolute));
-
-            var writableImage = BitmapFactory.ConvertToPbgra32Format(img);
-
-            if (sliderHue <= 0f || sliderHue >= 360f)
-            {
-                // No hue change just return
-                SampleImage2.Source = img;
-                return;
-            }
-
-            using (var context = writableImage.GetBitmapContext())
-            {
-                long numPixels = img.PixelWidth*img.PixelHeight;
-
-                for (int x = 0; x < img.PixelWidth; x++)
-                {
-                    for (int y = 0; y < img.PixelHeight; y++)
-                    {
-                        var pixel = writableImage.GetPixel(x, y);
-
-                        var newHue = (float) (sliderHue + pixel.GetHue());
-                        if (newHue >= 360)
-                            newHue -= 360;
-
-                        var color = Util.FromAhsb((int) 255,
-                            newHue, pixel.GetSaturation(), pixel.GetBrightness());
-
-                        writableImage.SetPixel(x, y, color);
-                    }
-                }
-            }
-
-
-
-            SampleImage2.Source = writableImage;
-        }
-
         private void LSlider_OnOnValueChanged(double value)
         {
             if (!IsSettingValues)
@@ -353,22 +260,6 @@ namespace ColorPickerWPF
             }
         }
 
-
-        public void SaveCustomPalette(string filename)
-        {
-            var colors = CustomColorSwatch.GetColors();
-            ColorPalette.CustomColors = colors;
-
-            try
-            {
-                ColorPalette.SaveToXml(filename);
-            }
-            catch (Exception ex)
-            {
-                ex = ex;
-            }
-        }
-
         public void LoadCustomPalette(string filename)
         {
             if (File.Exists(filename))
@@ -377,7 +268,6 @@ namespace ColorPickerWPF
                 {
                     ColorPalette = ColorPalette.LoadFromXml(filename);
 
-                    CustomColorSwatch.SwatchListBox.ItemsSource = ColorPalette.CustomColors.ToList();
 
                     // Do regular one too
 
@@ -396,12 +286,5 @@ namespace ColorPickerWPF
 
             }
         }
-
-
-        public void LoadDefaultCustomPalette()
-        {
-            LoadCustomPalette(Path.Combine(ColorPickerSettings.CustomColorsDirectory, ColorPickerSettings.CustomColorsFilename));
-        }
-
     }
 }

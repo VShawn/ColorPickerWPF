@@ -9,9 +9,9 @@ using UserControl = System.Windows.Controls.UserControl;
 namespace ColorPickerWPF
 {
     /// <summary>
-    /// Interaction logic for ColorPickRow.xaml
+    /// Interaction logic for ColorPickRowPopup.xaml
     /// </summary>
-    public partial class ColorPickRow : UserControl, INotifyPropertyChanged
+    public partial class ColorPickRowPopup : UserControl, INotifyPropertyChanged
     {
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
@@ -24,15 +24,15 @@ namespace ColorPickerWPF
         public event EventHandler OnPick;
 
 
-        public static readonly DependencyProperty ColorProperty = DependencyProperty.Register("Color", typeof(Color), typeof(ColorPickRow),
+        public static readonly DependencyProperty ColorProperty = DependencyProperty.Register("Color", typeof(Color), typeof(ColorPickRowPopup),
           new PropertyMetadata(Colors.White, OnDataChanged));
 
         private static void OnDataChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var value = (Color)e.NewValue;
-            ((ColorPickRow)d).ColorDisplayGrid.Background = new SolidColorBrush(value);
-            ((ColorPickRow)d).HexLabel.Text = value.ToHexString();
-            ((ColorPickRow)d).OnPropertyChanged(nameof(Color));
+            ((ColorPickRowPopup)d).ColorDisplayGrid.Background = new SolidColorBrush(value);
+            ((ColorPickRowPopup)d).HexLabel.Text = value.ToHexString();
+            ((ColorPickRowPopup)d).OnPropertyChanged(nameof(Color));
         }
 
         public Color Color
@@ -45,20 +45,23 @@ namespace ColorPickerWPF
             }
         }
 
-        public ColorPickRow()
+        public ColorPickRowPopup()
         {
             InitializeComponent();
             this.DataContext = this;
+            ColorPicker.OnPickColor += color => { SetColor(color); };
         }
 
         private void PickColorButton_OnClick(object sender, RoutedEventArgs e)
         {
-            Color color;
-            if (ColorPickerWindow.ShowDialog(out color))
-            {
-                SetColor(color);
-                OnPick?.Invoke(this, EventArgs.Empty);
-            }
+            PopupPicker.Focus();
+            PopupPicker.IsOpen = true;
+            //Color color;
+            //if (ColorPickerWindow.ShowDialog(out color))
+            //{
+            //    SetColor(color);
+            //    OnPick?.Invoke(this, EventArgs.Empty);
+            //}
         }
 
         public void SetColor(Color color)

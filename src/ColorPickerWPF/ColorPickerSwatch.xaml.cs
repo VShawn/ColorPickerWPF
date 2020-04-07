@@ -46,10 +46,10 @@ namespace ColorPickerWPF
                     data.HexString = CurrentColor.ToHexString();
                 }
 
-                if (ColorPickerControl != null)
-                {
-                    ColorPickerControl.CustomColorsChanged();
-                }
+                //if (ColorPickerControl != null)
+                //{
+                //    ColorPickerControl.CustomColorsChanged();
+                //}
             }
             else
             {
